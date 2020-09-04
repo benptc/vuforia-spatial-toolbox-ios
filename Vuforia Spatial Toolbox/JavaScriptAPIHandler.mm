@@ -25,6 +25,8 @@
 //    NSString* matrixStreamCallback;
     NSString* speechCallback;
     bool vuforiaRunning;
+    NSString *currentScreensshotSize;
+    NSString* currentScreenshotCallback;
 }
 
 - (id)initWithDelegate:(id<JavaScriptCallbackDelegate>)newDelegate
@@ -165,6 +167,40 @@
     NSData *imageData = UIImageJPEGRepresentation(cameraImage, 1.0);
     NSString *encodedString = [NSString stringWithFormat:@"'%@'", [imageData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]];
     [delegate callJavaScriptCallback:callback withArguments:@[encodedString]];
+}
+
+- (void)subscribeToScreenshots:(NSString *)size callback:(NSString *)callback
+{
+    currentScreensshotSize = size;
+    currentScreenshotCallback = callback;
+    
+    [NSTimer scheduledTimerWithTimeInterval:1.0
+                                     target:self
+                                   selector:@selector(singleScreenshot)
+                                   userInfo:nil
+                                    repeats:YES];
+}
+
+- (void)singleScreenshot
+{
+    UIImage* cameraImage = [[ARManager sharedManager] getCameraScreenshot];
+    CGFloat imageWidth = cameraImage.size.width;
+    CGFloat imageHeight = cameraImage.size.height;
+
+    if ([currentScreensshotSize isEqualToString:@"S"]) {
+        // rescale small => 1/4 size
+        cameraImage = [self resizeImage:cameraImage newSize:CGSizeMake(imageWidth * 0.25, imageHeight * 0.25)];
+    } else if ([currentScreensshotSize isEqualToString:@"M"]) {
+        // rescale medium => 1/2 size
+        cameraImage = [self resizeImage:cameraImage newSize:CGSizeMake(imageWidth * 0.50, imageHeight * 0.50)];
+    } else { //if ([size isEqualToString:@"L"]) {
+        // don't rescale
+    }
+
+    NSData *imageData = UIImageJPEGRepresentation(cameraImage, 1.0);
+    NSString *encodedString = [NSString stringWithFormat:@"'%@'", [imageData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]];
+
+    [delegate callJavaScriptCallback:currentScreenshotCallback withArguments:@[encodedString]];
 }
 
 - (UIImage *)resizeImage:(UIImage*)image newSize:(CGSize)newSize {

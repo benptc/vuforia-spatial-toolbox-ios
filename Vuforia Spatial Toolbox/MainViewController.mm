@@ -196,6 +196,10 @@
         NSString* size = (NSString *)arguments[@"size"];
         [self.apiHandler getScreenshot:size callback:callback];
         
+    } else if ([functionName isEqualToString:@"subscribeToScreenshots"]) {
+        NSString* size = (NSString *)arguments[@"size"];
+        [self.apiHandler subscribeToScreenshots:size callback:callback];
+        
     } else if ([functionName isEqualToString:@"setPause"]) {
         [self.apiHandler setPause];
         
